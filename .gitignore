@@ -45,3 +45,13 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# tesseract data
+*.traineddata
+
+# test/debug scripts
+test-*.mjs
+test-*.ts
+
+# HAR files (may contain sensitive data)
+*.har

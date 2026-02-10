@@ -46,7 +46,7 @@ A word puzzle from the Otago Daily Times (ODT) combining jigsaw and crossword el
 - **Framework**: Next.js 16+ (App Router) + Tailwind CSS
 - **Hosting**: Vercel (serverless)
 - **Storage**: Upstash Redis (puzzles auto-expire after 24h)
-- **AI**: OpenAI GPT-4o-mini for image parsing
+- **AI**: Claude vision API (Sonnet 4 default, configurable)
 
 ## Project Structure
 
@@ -58,7 +58,7 @@ A word puzzle from the Otago Daily Times (ODT) combining jigsaw and crossword el
   /api
     /passphrase/route.ts # Generate 4-word passphrase
     /puzzle/route.ts     # GET/POST puzzle data
-    /parse/route.ts      # OpenAI image parsing
+    /parse/route.ts      # Claude image parsing
 /src/lib
   /passphrase.ts         # Passphrase word list + generator
   /redis.ts              # Upstash Redis client
@@ -94,7 +94,7 @@ interface Puzzle {
 - `POST /api/passphrase` - Generate a new 4-word passphrase
 - `POST /api/puzzle` - Store puzzle data `{ passphrase, puzzleData }`
 - `GET /api/puzzle?passphrase=...` - Fetch puzzle by passphrase
-- `POST /api/parse` - Parse puzzle image with OpenAI `{ image, mimeType }`
+- `POST /api/parse` - Parse puzzle image with Claude `{ image, mimeType }`
 
 ## AI Image Parsing
 
@@ -142,9 +142,15 @@ Example output:
 
 Create `.env.local`:
 ```
-OPENAI_API_KEY=sk-...              # Required for image parsing
-UPSTASH_REDIS_REST_URL=https://... # From Upstash console
-UPSTASH_REDIS_REST_TOKEN=...       # From Upstash console
+# Vision model (pick one):
+#   claude-sonnet-4-20250514  (default, recommended)
+#   claude-haiku-3-5-20241022 (budget ~$0.003/image)
+#   claude-opus-4-20250514    (best accuracy, expensive)
+VISION_MODEL=claude-sonnet-4-20250514
+
+ANTHROPIC_API_KEY=sk-ant-...       # From console.anthropic.com
+UPSTASH_REDIS_REST_URL=https://... # From console.upstash.com
+UPSTASH_REDIS_REST_TOKEN=...       # From console.upstash.com
 ```
 
 ## Commands

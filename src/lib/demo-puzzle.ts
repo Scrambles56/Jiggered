@@ -1,7 +1,9 @@
 // Demo puzzle data from examples/example_001/puzzle_data.txt
-// Use passphrase "demo" to load this without calling OpenAI
+// Use passphrase "demo" to load this without calling the AI API
+// Use passphrase "demo-ai" to test the AI parsing pipeline
 
 export const DEMO_PASSPHRASE = "demo";
+export const DEMO_AI_PASSPHRASE = "demo-ai";
 
 export const demoPuzzleData = {
   gridSize: { rows: 15, cols: 15 },

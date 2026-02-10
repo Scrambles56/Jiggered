@@ -14,6 +14,21 @@ interface PuzzleData {
 
 type Mode = "enter" | "edit" | "play";
 
+// Create a blank tile with all empty cells
+const createBlankTile = (): PuzzleTile => ({
+  letters: [
+    ["-", "-", "-"],
+    ["-", "-", "-"],
+    ["-", "-", "-"],
+  ],
+});
+
+// Create blank puzzle with 25 tiles
+const createBlankPuzzle = (): PuzzleData => ({
+  gridSize: { rows: 15, cols: 15 },
+  tiles: Array(25).fill(null).map(() => createBlankTile()),
+});
+
 // Grid is 5x5 tiles
 const GRID_SIZE = 5;
 
@@ -35,6 +50,27 @@ export default function PlayPage() {
   );
   const [draggedTile, setDraggedTile] = useState<number | null>(null);
 
+  const fetchPuzzle = async (passphraseToFetch: string): Promise<boolean> => {
+    const res = await fetch(`/api/puzzle?passphrase=${encodeURIComponent(passphraseToFetch)}`);
+    const data = await res.json();
+
+    if (!res.ok) {
+      setError(data.error || "Failed to load puzzle");
+      return false;
+    }
+
+    // Handle demo-ai redirect: AI parsed the image and stored it with a new passphrase
+    if (data.demoRedirect && data.generatedPassphrase) {
+      setPassphrase(data.generatedPassphrase);
+      // Recursively fetch with the generated passphrase
+      return fetchPuzzle(data.generatedPassphrase);
+    }
+
+    setPuzzleData(data.puzzleData);
+    setMode("edit");
+    return true;
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!passphrase.trim()) return;
@@ -43,16 +79,7 @@ export default function PlayPage() {
     setError(null);
 
     try {
-      const res = await fetch(`/api/puzzle?passphrase=${encodeURIComponent(passphrase.trim())}`);
-      const data = await res.json();
-
-      if (!res.ok) {
-        setError(data.error || "Failed to load puzzle");
-        return;
-      }
-
-      setPuzzleData(data.puzzleData);
-      setMode("edit");
+      await fetchPuzzle(passphrase.trim());
     } catch {
       setError("Failed to connect to server");
     } finally {
@@ -63,15 +90,35 @@ export default function PlayPage() {
   const handleLetterChange = (tileIndex: number, row: number, col: number, value: string) => {
     if (!puzzleData) return;
 
+    // Only allow A-Z letters and "-" for black squares
+    const filtered = value.replace(/[^a-zA-Z\-]/g, "");
+    const letter = filtered.slice(-1).toUpperCase() || "-";
+
     const newTiles = puzzleData.tiles.map((tile, i) => {
       if (i !== tileIndex) return tile;
       const newLetters = tile.letters.map((r, ri) =>
-        r.map((c, ci) => (ri === row && ci === col ? value.toUpperCase().slice(-1) || "-" : c))
+        r.map((c, ci) => (ri === row && ci === col ? letter : c))
       );
       return { ...tile, letters: newLetters };
     });
 
     setPuzzleData({ ...puzzleData, tiles: newTiles });
+
+    // Auto-advance to next cell if a valid character was entered
+    if (filtered.length > 0) {
+      const nextCol = col + 1;
+      const nextRow = nextCol >= 3 ? row + 1 : row;
+      const nextTile = nextRow >= 3 ? tileIndex + 1 : tileIndex;
+      if (nextTile < 25) {
+        setEditingCell({
+          tileIndex: nextTile,
+          row: nextRow % 3,
+          col: nextCol % 3,
+        });
+      } else {
+        setEditingCell(null);
+      }
+    }
   };
 
   const handleCellClick = (tileIndex: number, row: number, col: number) => {
@@ -246,6 +293,21 @@ export default function PlayPage() {
               {error}
             </p>
           )}
+
+          <div className="mt-8 pt-8 border-t border-zinc-200 dark:border-zinc-700">
+            <p className="mb-4 text-center text-zinc-500 dark:text-zinc-400 text-sm">
+              Or enter the puzzle manually
+            </p>
+            <button
+              onClick={() => {
+                setPuzzleData(createBlankPuzzle());
+                setMode("edit");
+              }}
+              className="flex h-12 w-full items-center justify-center rounded-xl border-2 border-dashed border-zinc-300 text-zinc-600 transition-colors hover:border-blue-500 hover:text-blue-600 hover:bg-blue-50 dark:border-zinc-600 dark:text-zinc-400 dark:hover:border-blue-500 dark:hover:text-blue-400 dark:hover:bg-blue-900/20"
+            >
+              Create Puzzle Manually
+            </button>
+          </div>
         </div>
       )}
 
@@ -255,13 +317,23 @@ export default function PlayPage() {
             Click any letter to correct it, then confirm when ready
           </p>
 
+          {puzzleData.tiles.length !== 25 && (
+            <p className="mb-4 text-center text-sm text-amber-600 dark:text-amber-400">
+              Warning: Expected 25 tiles but got {puzzleData.tiles.length}. AI parsing may have failed.
+            </p>
+          )}
+
           <div className="grid grid-cols-5 gap-3 mb-6 mx-auto w-fit">
             {puzzleData.tiles.map((tile, index) => renderTile(tile, index))}
           </div>
 
           <div className="flex justify-center gap-4">
             <button
-              onClick={() => setMode("enter")}
+              onClick={() => {
+                setMode("enter");
+                setPuzzleData(null);
+                setPassphrase("");
+              }}
               className="px-6 py-3 rounded-xl border border-zinc-300 text-zinc-700 hover:bg-zinc-100 dark:border-zinc-600 dark:text-zinc-300 dark:hover:bg-zinc-800"
             >
               Back

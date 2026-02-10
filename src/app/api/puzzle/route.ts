@@ -1,6 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { redis, PUZZLE_TTL, type StoredPuzzle } from "@/lib/redis";
-import { DEMO_PASSPHRASE, demoPuzzleData } from "@/lib/demo-puzzle";
+import { DEMO_PASSPHRASE, DEMO_AI_PASSPHRASE, demoPuzzleData } from "@/lib/demo-puzzle";
+import { generatePassphrase } from "@/lib/passphrase";
+import { parsePuzzleImage } from "@/lib/puzzle-parser";
+import { readFileSync } from "fs";
+import { join } from "path";
 
 export async function POST(request: NextRequest) {
   try {
@@ -19,7 +23,8 @@ export async function POST(request: NextRequest) {
     };
 
     // Store with TTL (auto-expires after 24 hours)
-    await redis.set(`puzzle:${passphrase}`, JSON.stringify(stored), {
+    // Upstash Redis automatically handles JSON serialization
+    await redis.set(`puzzle:${passphrase}`, stored, {
       ex: PUZZLE_TTL,
     });
 
@@ -54,16 +59,43 @@ export async function GET(request: NextRequest) {
       });
     }
 
-    const data = await redis.get<string>(`puzzle:${passphrase}`);
+    // Test AI parsing with the example image - simulates full scan flow
+    if (passphrase === DEMO_AI_PASSPHRASE) {
+      // Step 1: Generate a real passphrase (like /api/passphrase does)
+      const generatedPassphrase = generatePassphrase();
 
-    if (!data) {
+      // Step 2: Read and parse the example image (like /api/parse does)
+      const imagePath = join(process.cwd(), "examples/example_001/puzzle_details.jpg");
+      const imageBuffer = readFileSync(imagePath);
+      const base64Image = imageBuffer.toString("base64");
+      const puzzleData = await parsePuzzleImage(base64Image, "image/jpeg");
+
+      // Step 3: Store in Redis (like POST /api/puzzle does)
+      const stored: StoredPuzzle = {
+        puzzleData,
+        createdAt: Date.now(),
+      };
+      // Upstash Redis automatically handles JSON serialization
+      await redis.set(`puzzle:${generatedPassphrase}`, stored, {
+        ex: PUZZLE_TTL,
+      });
+
+      // Step 4: Return redirect so client fetches using the generated passphrase
+      return NextResponse.json({
+        demoRedirect: true,
+        generatedPassphrase,
+      });
+    }
+
+    // Upstash Redis automatically handles JSON deserialization
+    const stored = await redis.get<StoredPuzzle>(`puzzle:${passphrase}`);
+
+    if (!stored) {
       return NextResponse.json(
         { error: "Puzzle not found or expired" },
         { status: 404 }
       );
     }
-
-    const stored: StoredPuzzle = JSON.parse(data);
 
     return NextResponse.json({
       passphrase,
