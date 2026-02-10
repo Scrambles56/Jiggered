@@ -17,9 +17,9 @@ type Mode = "enter" | "edit" | "play";
 // Create a blank tile with all empty cells
 const createBlankTile = (): PuzzleTile => ({
   letters: [
-    ["-", "-", "-"],
-    ["-", "-", "-"],
-    ["-", "-", "-"],
+    ["", "", ""],
+    ["", "", ""],
+    ["", "", ""],
   ],
 });
 
@@ -92,7 +92,7 @@ export default function PlayPage() {
 
     // Only allow A-Z letters and "-" for black squares
     const filtered = value.replace(/[^a-zA-Z\-]/g, "");
-    const letter = filtered.slice(-1).toUpperCase() || "-";
+    const letter = filtered.length > 0 ? filtered.slice(-1).toUpperCase() : "";
 
     const newTiles = puzzleData.tiles.map((tile, i) => {
       if (i !== tileIndex) return tile;
@@ -195,7 +195,8 @@ export default function PlayPage() {
             editingCell?.tileIndex === tileIndex &&
             editingCell?.row === rowIndex &&
             editingCell?.col === colIndex;
-          const isEmpty = letter === "-";
+          const isBlack = letter === "-";
+          const isUnfilled = letter === "";
 
           return (
             <div
@@ -203,7 +204,7 @@ export default function PlayPage() {
               onClick={() => handleCellClick(tileIndex, rowIndex, colIndex)}
               className={`
                 w-8 h-8 flex items-center justify-center text-sm font-bold
-                ${isEmpty && mode !== "edit" ? "bg-zinc-800 dark:bg-zinc-900" : "bg-white dark:bg-zinc-700"}
+                ${isBlack ? "bg-zinc-800 dark:bg-zinc-900" : "bg-white dark:bg-zinc-700"}
                 ${mode === "edit" ? "cursor-pointer hover:bg-blue-100 dark:hover:bg-blue-900" : ""}
                 ${isEditing ? "ring-2 ring-blue-500" : ""}
               `}
@@ -211,7 +212,7 @@ export default function PlayPage() {
               {isEditing ? (
                 <input
                   type="text"
-                  value={letter === "-" ? "" : letter}
+                  value={isBlack || isUnfilled ? "" : letter}
                   onChange={(e) => handleLetterChange(tileIndex, rowIndex, colIndex, e.target.value)}
                   onBlur={() => setEditingCell(null)}
                   onKeyDown={(e) => e.key === "Enter" && setEditingCell(null)}
@@ -219,7 +220,7 @@ export default function PlayPage() {
                   className="w-full h-full text-center bg-transparent outline-none text-zinc-900 dark:text-zinc-50"
                   maxLength={1}
                 />
-              ) : isEmpty ? null : (
+              ) : isBlack || isUnfilled ? null : (
                 <span className="text-zinc-900 dark:text-zinc-50">{letter}</span>
               )}
             </div>
