@@ -104,16 +104,25 @@ export default function PlayPage() {
 
     setPuzzleData({ ...puzzleData, tiles: newTiles });
 
-    // Auto-advance to next cell if a valid character was entered
+    // Auto-advance across the row (left to right across the full 15-cell row)
     if (filtered.length > 0) {
-      const nextCol = col + 1;
-      const nextRow = nextCol >= 3 ? row + 1 : row;
-      const nextTile = nextRow >= 3 ? tileIndex + 1 : tileIndex;
-      if (nextTile < 25) {
+      const tileGridRow = Math.floor(tileIndex / 5);
+      const tileGridCol = tileIndex % 5;
+      const globalCol = tileGridCol * 3 + col;
+      const globalRow = tileGridRow * 3 + row;
+
+      let nextGlobalCol = globalCol + 1;
+      let nextGlobalRow = globalRow;
+      if (nextGlobalCol >= 15) {
+        nextGlobalCol = 0;
+        nextGlobalRow++;
+      }
+
+      if (nextGlobalRow < 15) {
         setEditingCell({
-          tileIndex: nextTile,
-          row: nextRow % 3,
-          col: nextCol % 3,
+          tileIndex: Math.floor(nextGlobalRow / 3) * 5 + Math.floor(nextGlobalCol / 3),
+          row: nextGlobalRow % 3,
+          col: nextGlobalCol % 3,
         });
       } else {
         setEditingCell(null);
@@ -215,7 +224,10 @@ export default function PlayPage() {
                   value={isBlack || isUnfilled ? "" : letter}
                   onChange={(e) => handleLetterChange(tileIndex, rowIndex, colIndex, e.target.value)}
                   onBlur={() => setEditingCell(null)}
-                  onKeyDown={(e) => e.key === "Enter" && setEditingCell(null)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Tab") e.preventDefault();
+                    if (e.key === "Enter") setEditingCell(null);
+                  }}
                   autoFocus
                   className="w-full h-full text-center bg-transparent outline-none text-black dark:text-zinc-50"
                   maxLength={1}
