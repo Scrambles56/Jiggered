@@ -203,8 +203,8 @@ export default function PlayPage() {
               onClick={() => handleCellClick(tileIndex, rowIndex, colIndex)}
               className={`
                 w-8 h-8 flex items-center justify-center text-sm font-bold
-                ${isEmpty ? "bg-zinc-800 dark:bg-zinc-900" : "bg-white dark:bg-zinc-700"}
-                ${mode === "edit" && !isEmpty ? "cursor-pointer hover:bg-blue-100 dark:hover:bg-blue-900" : ""}
+                ${isEmpty && mode !== "edit" ? "bg-zinc-800 dark:bg-zinc-900" : "bg-white dark:bg-zinc-700"}
+                ${mode === "edit" ? "cursor-pointer hover:bg-blue-100 dark:hover:bg-blue-900" : ""}
                 ${isEditing ? "ring-2 ring-blue-500" : ""}
               `}
             >
