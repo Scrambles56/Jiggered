@@ -315,6 +315,7 @@ export default function PlayPage() {
               onClick={() => {
                 setPuzzleData(createBlankPuzzle());
                 setMode("edit");
+                setEditingCell({ tileIndex: 0, row: 0, col: 0 });
               }}
               className="flex h-14 w-full items-center justify-center rounded-xl bg-green-600 text-lg font-semibold text-white transition-colors hover:bg-green-700"
             >
@@ -369,29 +370,32 @@ export default function PlayPage() {
 
           <div className="flex flex-col lg:flex-row gap-8 items-start justify-center">
             {/* Main puzzle grid (5x5 drop zones) */}
-            <div className="grid grid-cols-5 gap-1 p-4 bg-zinc-200 dark:bg-zinc-800 rounded-xl">
+            <div className="p-4 bg-zinc-200 dark:bg-zinc-800 rounded-xl">
+              <p className="text-sm text-zinc-500 dark:text-zinc-400 mb-3 text-center">
+                Puzzle grid
+              </p>
+              <div className="grid grid-cols-5 gap-1">
               {Array(GRID_SIZE).fill(null).map((_, rowIndex) =>
                 Array(GRID_SIZE).fill(null).map((_, colIndex) =>
                   renderGridCell(rowIndex, colIndex)
                 )
               )}
+              </div>
             </div>
 
             {/* Unplaced tiles */}
             <div
               onDragOver={handleDragOver}
               onDrop={handleDropOnUnplaced}
-              className="p-4 bg-zinc-200 dark:bg-zinc-800 rounded-xl w-[320px] h-[548px] flex flex-col"
+              className="p-4 bg-zinc-200 dark:bg-zinc-800 rounded-xl"
             >
-              <p className="text-sm text-zinc-500 dark:text-zinc-400 mb-3 text-center shrink-0">
+              <p className="text-sm text-zinc-500 dark:text-zinc-400 mb-3 text-center">
                 Unplaced tiles ({getUnplacedTiles().length})
               </p>
-              <div className="overflow-y-auto flex-1">
-                <div className="grid grid-cols-3 gap-2">
-                  {getUnplacedTiles().map((tileIndex) =>
-                    renderTile(puzzleData.tiles[tileIndex], tileIndex, true)
-                  )}
-                </div>
+              <div className="grid grid-cols-5 gap-2">
+                {getUnplacedTiles().map((tileIndex) =>
+                  renderTile(puzzleData.tiles[tileIndex], tileIndex, true)
+                )}
               </div>
             </div>
           </div>
