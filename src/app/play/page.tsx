@@ -185,7 +185,7 @@ export default function PlayPage() {
       key={tileIndex}
       draggable={draggable}
       onDragStart={() => handleDragStart(tileIndex)}
-      className={`grid grid-cols-3 gap-px bg-zinc-300 dark:bg-zinc-600 rounded overflow-hidden ${
+      className={`grid grid-cols-3 gap-px bg-zinc-400 dark:bg-zinc-600 rounded overflow-hidden border border-zinc-400 dark:border-zinc-600 ${
         draggable ? "cursor-grab active:cursor-grabbing" : ""
       }`}
     >
@@ -204,7 +204,7 @@ export default function PlayPage() {
               onClick={() => handleCellClick(tileIndex, rowIndex, colIndex)}
               className={`
                 w-8 h-8 flex items-center justify-center text-sm font-bold
-                ${isBlack ? "bg-zinc-800 dark:bg-zinc-900" : "bg-white dark:bg-zinc-700"}
+                ${isBlack ? "bg-zinc-900 dark:bg-zinc-900" : "bg-white dark:bg-zinc-700"}
                 ${mode === "edit" ? "cursor-pointer hover:bg-blue-100 dark:hover:bg-blue-900" : ""}
                 ${isEditing ? "ring-2 ring-blue-500" : ""}
               `}
@@ -217,11 +217,11 @@ export default function PlayPage() {
                   onBlur={() => setEditingCell(null)}
                   onKeyDown={(e) => e.key === "Enter" && setEditingCell(null)}
                   autoFocus
-                  className="w-full h-full text-center bg-transparent outline-none text-zinc-900 dark:text-zinc-50"
+                  className="w-full h-full text-center bg-transparent outline-none text-black dark:text-zinc-50"
                   maxLength={1}
                 />
               ) : isBlack || isUnfilled ? null : (
-                <span className="text-zinc-900 dark:text-zinc-50">{letter}</span>
+                <span className="text-black dark:text-zinc-50">{letter}</span>
               )}
             </div>
           );
@@ -251,7 +251,7 @@ export default function PlayPage() {
   };
 
   return (
-    <div className="flex min-h-screen flex-col items-center bg-zinc-50 px-4 py-8 dark:bg-zinc-900">
+    <div className="flex min-h-screen flex-col items-center bg-zinc-200 px-4 py-8 dark:bg-zinc-900">
       <Link
         href="/"
         className="mb-8 text-sm text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300"
@@ -304,7 +304,7 @@ export default function PlayPage() {
                 setPuzzleData(createBlankPuzzle());
                 setMode("edit");
               }}
-              className="flex h-12 w-full items-center justify-center rounded-xl border-2 border-dashed border-zinc-300 text-zinc-600 transition-colors hover:border-blue-500 hover:text-blue-600 hover:bg-blue-50 dark:border-zinc-600 dark:text-zinc-400 dark:hover:border-blue-500 dark:hover:text-blue-400 dark:hover:bg-blue-900/20"
+              className="flex h-14 w-full items-center justify-center rounded-xl bg-green-600 text-lg font-semibold text-white transition-colors hover:bg-green-700"
             >
               Create Puzzle Manually
             </button>
